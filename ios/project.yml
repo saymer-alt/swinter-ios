@@ -1,0 +1,66 @@
+# ==============================================================================
+# XcodeGen Project Spec
+# ==============================================================================
+# Генерация Xcode проекта:
+#   brew install xcodegen
+#   cd ios && xcodegen generate
+# ==============================================================================
+
+name: VKTurnVPN
+
+options:
+  bundleIdPrefix: com.vkturn
+  deploymentTarget:
+    iOS: "16.0"
+  xcodeVersion: "15.0"
+  generateEmptyDirectories: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    DEVELOPMENT_TEAM: ""  # <-- Вставь свой Team ID или оставь пустым для free signing
+    IPHONEOS_DEPLOYMENT_TARGET: "16.0"
+
+# ==============================================================================
+# Targets
+# ==============================================================================
+
+targets:
+
+  # --- Основное приложение ---
+  VKTurnVPN:
+    type: application
+    platform: iOS
+    sources:
+      - path: VKTurnVPN/App
+        type: group
+      - path: VKTurnVPN/Shared
+        type: group
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.vkturn.vpn
+        INFOPLIST_FILE: VKTurnVPN/App/Info.plist
+        CODE_SIGN_ENTITLEMENTS: VKTurnVPN/App/VKTurnVPN.entitlements
+        ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES: YES
+    dependencies:
+      - target: VKTurnTunnel
+      - framework: ../golib/Vpnlib.xcframework
+        embed: true
+
+  # --- Network Extension (VPN туннель) ---
+  VKTurnTunnel:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: VKTurnVPN/Tunnel
+        type: group
+      - path: VKTurnVPN/Shared
+        type: group
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.vkturn.vpn.tunnel
+        INFOPLIST_FILE: VKTurnVPN/Tunnel/Info.plist
+        CODE_SIGN_ENTITLEMENTS: VKTurnVPN/Tunnel/Tunnel.entitlements
+    dependencies:
+      - framework: ../golib/Vpnlib.xcframework
+        embed: false

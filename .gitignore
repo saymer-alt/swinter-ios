@@ -1,0 +1,24 @@
+# macOS
+.DS_Store
+*.swp
+*~
+
+# Xcode
+ios/VKTurnVPN.xcodeproj/xcuserdata/
+ios/VKTurnVPN.xcodeproj/project.xcworkspace/xcuserdata/
+ios/build/
+ios/DerivedData/
+*.xcuserstate
+
+# Go build artifacts
+golib/Vpnlib.xcframework/
+golib/build/
+
+# Sensitive configs (keys, credentials)
+configs/client*.conf
+configs/ios-config.json
+
+# Claude memory
+.claude/
+
+# Go module cache (committed go.sum is fine)
