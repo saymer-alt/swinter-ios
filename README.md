@@ -1,5 +1,7 @@
 # VK Turn VPN
 
+> **Disclaimer:** Этот проект навайбкоден с помощью Claude Code. Я не программист, но всё протестировано руками — работает. К любой помощи и PR'ам открыт!
+
 iOS-приложение для обхода белых списков через TURN-серверы ВК-звонков.
 
 ## Как это работает
@@ -137,3 +139,7 @@ make xcode
 - [wireguard-go](https://git.zx2c4.com/wireguard-go) — WireGuard реализация на Go
 - [pion/turn](https://github.com/pion/turn) — TURN-клиент
 - [pion/dtls](https://github.com/pion/dtls) — DTLS шифрование
+
+---
+
+> **Ещё раз:** проект навайбкоден, я не программист. Если видишь баг или знаешь как улучшить — PR welcome. Всё тестировалось руками на iPhone 16 Pro + VPS с 3x-ui.
