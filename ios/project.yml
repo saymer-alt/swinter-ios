@@ -6,10 +6,10 @@
 #   cd ios && xcodegen generate
 # ==============================================================================
 
-name: VKTurnVPN
+name: Swinter
 
 options:
-  bundleIdPrefix: com.vkturn
+  bundleIdPrefix: com.swinter
   deploymentTarget:
     iOS: "16.0"
   xcodeVersion: "15.0"
@@ -22,13 +22,30 @@ settings:
     IPHONEOS_DEPLOYMENT_TARGET: "16.0"
 
 # ==============================================================================
+# Schemes
+# ==============================================================================
+
+schemes:
+  Swinter:
+    build:
+      targets:
+        Swinter: all
+        SwinterTunnel: all
+    run:
+      config: Debug
+    profile:
+      config: Release
+    archive:
+      config: Release
+
+# ==============================================================================
 # Targets
 # ==============================================================================
 
 targets:
 
   # --- Основное приложение ---
-  VKTurnVPN:
+  Swinter:
     type: application
     platform: iOS
     sources:
@@ -38,17 +55,21 @@ targets:
         type: group
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.vkturn.vpn
+        PRODUCT_BUNDLE_IDENTIFIER: com.swinter.vpn
+        PRODUCT_NAME: Swinter
         INFOPLIST_FILE: VKTurnVPN/App/Info.plist
         CODE_SIGN_ENTITLEMENTS: VKTurnVPN/App/VKTurnVPN.entitlements
         ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES: YES
+        HEADER_SEARCH_PATHS:
+          - "$(BUILT_PRODUCTS_DIR)/WebRTC.framework/Headers"
+          - "$(BUILT_PRODUCTS_DIR)/WebRTC.framework/Headers/sdk/objc/base"
     dependencies:
-      - target: VKTurnTunnel
-      - framework: ../golib/Vpnlib.xcframework
+      - target: SwinterTunnel
+      - framework: ../golib/Swinterlib.xcframework
         embed: true
 
   # --- Network Extension (VPN туннель) ---
-  VKTurnTunnel:
+  SwinterTunnel:
     type: app-extension
     platform: iOS
     sources:
@@ -58,9 +79,13 @@ targets:
         type: group
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.vkturn.vpn.tunnel
+        PRODUCT_BUNDLE_IDENTIFIER: com.swinter.vpn.tunnel
+        PRODUCT_NAME: SwinterTunnel
         INFOPLIST_FILE: VKTurnVPN/Tunnel/Info.plist
         CODE_SIGN_ENTITLEMENTS: VKTurnVPN/Tunnel/Tunnel.entitlements
+        HEADER_SEARCH_PATHS:
+          - "$(BUILT_PRODUCTS_DIR)/WebRTC.framework/Headers"
+          - "$(BUILT_PRODUCTS_DIR)/WebRTC.framework/Headers/sdk/objc/base"
     dependencies:
-      - framework: ../golib/Vpnlib.xcframework
+      - framework: ../golib/Swinterlib.xcframework
         embed: false

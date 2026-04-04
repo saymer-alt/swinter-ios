@@ -11,8 +11,27 @@ enum VPNState: Equatable {
 
 // MARK: - VPN Config
 
+enum TurnSource: String, Codable, CaseIterable {
+    case vk = "vk"
+    case max = "max"
+    case maxCall = "maxCall"
+
+    var title: String {
+        switch self {
+        case .vk: return "VK TURN"
+        case .max: return "MAX TURN"
+        case .maxCall: return "MAX Call"
+        }
+    }
+}
+
 struct VPNConfig: Codable, Equatable {
+    var turnSource: TurnSource = .vk
     var vkLink: String = ""
+    var maxToken: String = ""
+    var maxTargetUserID: String = ""
+    var maxCallServerPubkey: String = ""  // X25519 hex pubkey for MAX Call mode
+    var maxPhone: String = ""  // Phone number used for MAX login (display only)
     var peerAddr: String = ""
     var wgPrivateKey: String = ""
     var wgPublicKey: String = ""
@@ -37,6 +56,22 @@ struct VPNConfig: Codable, Equatable {
         guard let data = UserDefaults.standard.data(forKey: configKey),
               let config = try? JSONDecoder().decode(VPNConfig.self, from: data) else {
             return VPNConfig()
+        }
+        return config
+    }
+
+    /// Export config as shareable JSON string (for copy/paste)
+    func exportJSON() -> String {
+        guard let data = try? JSONEncoder().encode(self),
+              let str = String(data: data, encoding: .utf8) else { return "{}" }
+        return str
+    }
+
+    /// Import config from JSON string
+    static func importJSON(_ json: String) -> VPNConfig? {
+        guard let data = json.data(using: .utf8),
+              let config = try? JSONDecoder().decode(VPNConfig.self, from: data) else {
+            return nil
         }
         return config
     }

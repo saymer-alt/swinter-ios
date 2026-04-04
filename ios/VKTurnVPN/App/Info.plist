@@ -5,7 +5,7 @@
     <key>CFBundleDevelopmentRegion</key>
     <string>ru</string>
     <key>CFBundleDisplayName</key>
-    <string>VK Turn VPN</string>
+    <string>Swinter</string>
     <key>CFBundleExecutable</key>
     <string>$(EXECUTABLE_NAME)</string>
     <key>CFBundleIdentifier</key>
@@ -32,10 +32,25 @@
     <array>
         <string>UIInterfaceOrientationPortrait</string>
     </array>
+    <key>UIRequiresFullScreen</key>
+    <true/>
     <key>UIApplicationSceneManifest</key>
     <dict>
         <key>UIApplicationSupportsMultipleScenes</key>
         <false/>
     </dict>
+    <key>NSCameraUsageDescription</key>
+    <string>Камера нужна для сканирования QR-кодов серверов</string>
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleURLName</key>
+            <string>com.swinter.vpn</string>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>swinter</string>
+            </array>
+        </dict>
+    </array>
 </dict>
 </plist>

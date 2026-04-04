@@ -1,3 +1,5 @@
+//go:build ios
+
 package vpnlib
 
 // Custom TUN for iOS Network Extension.
@@ -21,7 +23,7 @@ type iosTUN struct {
 	closer sync.Once
 }
 
-func createIOSTUN(fd int, mtu int) (tun.Device, error) {
+func createTUN(fd int, mtu int) (tun.Device, error) {
 	return &iosTUN{
 		fd:     os.NewFile(uintptr(fd), "/dev/utun"),
 		mtu:    mtu,

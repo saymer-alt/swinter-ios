@@ -1,79 +1,19 @@
 import SwiftUI
 
 @main
-struct VKTurnVPNApp: App {
+struct SwinterApp: App {
     @StateObject private var vpnManager = VPNManager()
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            TabRootView()
                 .environmentObject(vpnManager)
                 .preferredColorScheme(.dark)
-        }
-    }
-}
-
-struct ContentView: View {
-    @EnvironmentObject var vpn: VPNManager
-    @State private var showSettings = false
-
-    var body: some View {
-        ZStack {
-            LiquidBackground(connectionState: vpn.state)
-                .ignoresSafeArea()
-
-            VStack(spacing: 0) {
-                // Top bar
-                HStack {
-                    Text("VK Turn")
-                        .font(.system(size: 20, weight: .semibold, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.9))
-
-                    Spacer()
-
-                    Button {
-                        showSettings = true
-                    } label: {
-                        Image(systemName: "gearshape.fill")
-                            .font(.system(size: 18))
-                            .foregroundStyle(.white.opacity(0.6))
-                            .frame(width: 44, height: 44)
-                            .background(.ultraThinMaterial, in: Circle())
-                            .overlay(Circle().stroke(.white.opacity(0.1), lineWidth: 0.5))
+                .onOpenURL { url in
+                    if url.scheme == "swinter" && url.host == "toggle" {
+                        vpnManager.toggle()
                     }
                 }
-                .padding(.horizontal, 24)
-                .padding(.top, 8)
-
-                Spacer()
-
-                MainView()
-
-                Spacer()
-
-                // Error display
-                if !vpn.lastError.isEmpty {
-                    Text(vpn.lastError)
-                        .font(.system(size: 12, design: .monospaced))
-                        .foregroundStyle(.red.opacity(0.8))
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 8)
-                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 10))
-                        .padding(.horizontal, 24)
-                        .transition(.opacity)
-                }
-
-                // Stats bar
-                if vpn.state == .connected {
-                    StatsBar()
-                        .transition(.move(edge: .bottom).combined(with: .opacity))
-                }
-            }
-            .animation(.spring(response: 0.6, dampingFraction: 0.8), value: vpn.state)
-        }
-        .sheet(isPresented: $showSettings) {
-            SettingsView()
-                .environmentObject(vpn)
         }
     }
 }

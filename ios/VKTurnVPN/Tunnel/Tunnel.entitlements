@@ -11,7 +11,7 @@
     <!-- Shared App Group (тот же что у основного приложения) -->
     <key>com.apple.security.application-groups</key>
     <array>
-        <string>group.com.vkturn.vpn</string>
+        <string>group.com.swinter.vpn</string>
     </array>
 </dict>
 </plist>

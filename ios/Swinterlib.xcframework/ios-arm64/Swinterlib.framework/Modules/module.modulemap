@@ -1,0 +1,8 @@
+framework module "Swinterlib" {
+	header "ref.h"
+    header "Vpnlib.objc.h"
+    header "Universe.objc.h"
+    header "Swinterlib.h"
+
+    export *
+}
