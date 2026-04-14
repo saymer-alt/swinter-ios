@@ -118,10 +118,18 @@ golib/vpnlib/
 
 ---
 
+## Credits — what this is based on
+
+Almost none of the hard reverse-engineering work in this project is ours. We stand on the shoulders of:
+
+- **[cacggghp/vk-turn-proxy](https://github.com/cacggghp/vk-turn-proxy)** — the original VK TURN credential protocol (6-step anon-token flow through `login.vk.ru` → `api.vk.ru` → `calls.okcdn.ru`), the DTLS+TURN client pattern, and the **slider-captcha PoC bypass** (`slider_captcha.go`, ~900 lines of image-diff ranking that we vendored into `vpnlib/vk_captcha.go`). Go read that repo. It is the actual brain.
+- **[pion/dtls](https://github.com/pion/dtls)** and **[pion/turn](https://github.com/pion/turn)** — the DTLS 1.2/TURN client stacks we layer WireGuard over.
+- **MAX binary TCP protocol** — reverse-engineered from the Android client of MAX Messenger. Hits `api.oneme.ru:443` over plain TLS with a 10-byte header + MessagePack body, `deviceType=ANDROID` (the `WEB` value blocks SMS auth). Credit to anyone who's been poking at oneme in the open.
+- **[wireguard-go](https://github.com/WireGuard/wireguard-go)**, **[amnezia-vpn/amneziawg-go](https://github.com/amnezia-vpn/amneziawg-go)**, **[xtls/xray-core](https://github.com/XTLS/Xray-core)** — for the protocol guts of WG, AmneziaWG, and VLESS/VMess/Trojan/Shadowsocks respectively.
+- **[gvisor](https://github.com/google/gvisor)** netstack — tun2socks userspace TCP/IP.
+
 ## Related
 
 - Android version: [`somewhat-industries/swinter-android`](https://github.com/somewhat-industries/swinter-android)
-- MAX binary TCP protocol reverse-engineering credit: `api.oneme.ru:443`, standard TLS, `deviceType=ANDROID` for SMS auth
-- DTLS/TURN stack: [`pion/dtls`](https://github.com/pion/dtls), [`pion/turn`](https://github.com/pion/turn)
 
 No warranty. No support. Use at your own risk. If you get your MAX account rate-limited for making too many phantom calls, that's on you.

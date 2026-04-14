@@ -1,7 +1,11 @@
 package vpnlib
 
-// TURN proxy logic — adapted from github.com/cacggghp/vk-turn-proxy/client
-// Handles: VK credential fetching, DTLS encryption, TURN relay
+// TURN proxy logic.
+//
+// The VK credential-fetching flow and the DTLS+TURN client pattern are
+// vendored from https://github.com/cacggghp/vk-turn-proxy (MIT, Pion
+// community). Slider-captcha bypass lives in vk_captcha.go — also theirs.
+// Go read that repo. It is the actual brain of this feature.
 
 import (
 	"bytes"
@@ -13,6 +17,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	neturl "net/url"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -61,13 +66,17 @@ func getVkCreds(link string) (user string, pass string, addr string, retErr erro
 	}
 	defer client.CloseIdleConnections()
 
+	// Browser profile for the whole session — UA + sec-ch-ua + browser_fp
+	// must all stay consistent or VK will flag the captcha session.
+	profile := getRandomVkProfile()
+
 	doRequest := func(data string, url string) (resp map[string]interface{}, err error) {
 		req, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte(data)))
 		if err != nil {
 			return nil, err
 		}
-		req.Header.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:144.0) Gecko/20100101 Firefox/144.0")
-		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+		applyBrowserProfile(req, profile)
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 		httpResp, err := client.Do(req)
 		if err != nil {
@@ -145,16 +154,63 @@ func getVkCreds(link string) (user string, pass string, addr string, retErr erro
 		return "", "", "", fmt.Errorf("step3 parse: %w (resp: %v)", err, resp)
 	}
 
-	// Step 4: Get call anonymous token
-	data = fmt.Sprintf("vk_join_link=https://vk.com/call/join/%s&name=123&access_token=%s", link, token3)
+	// Step 4: Get call anonymous token — may return a captcha challenge.
+	// Retry loop with slider-POC auto-solve (vendored from
+	// cacggghp/vk-turn-proxy). VK returns error_code 14 with a redirect_uri
+	// that hosts a PoW puzzle + slider captcha; we bootstrap it, solve, and
+	// retry with success_token + captcha_ts + captcha_attempt.
 	url = "https://api.vk.ru/method/calls.getAnonymousToken?v=5.264"
-	resp, err = doRequest(data, url)
-	if err != nil {
-		return "", "", "", fmt.Errorf("step4: %w", err)
+	baseData := fmt.Sprintf("vk_join_link=https://vk.com/call/join/%s&name=123&access_token=%s", link, token3)
+	data = baseData
+
+	var token4 string
+	for attempt := 0; attempt < 3; attempt++ {
+		resp, err = doRequest(data, url)
+		if err != nil {
+			return "", "", "", fmt.Errorf("step4: %w", err)
+		}
+
+		if errObj, hasErr := resp["error"].(map[string]interface{}); hasErr {
+			captchaErr := parseVkCaptchaError(errObj)
+			if captchaErr == nil || !captchaErr.isCaptchaError() {
+				return "", "", "", fmt.Errorf("step4 VK error: %v", errObj)
+			}
+
+			log.Printf("[VK] captcha challenge on step4 (attempt %d), solving...", attempt+1)
+			ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+			successToken, solveErr := solveVkCaptcha(ctx, captchaErr, client, profile)
+			cancel()
+			if solveErr != nil {
+				log.Printf("[VK] captcha solve failed (attempt %d): %v", attempt+1, solveErr)
+				if attempt == 2 {
+					return "", "", "", fmt.Errorf("step4 captcha solve failed: %w", solveErr)
+				}
+				continue
+			}
+
+			captchaAttempt := captchaErr.CaptchaAttempt
+			if captchaAttempt == "" || captchaAttempt == "0" {
+				captchaAttempt = "1"
+			}
+			data = fmt.Sprintf(
+				"%s&captcha_key=&captcha_sid=%s&is_sound_captcha=0&success_token=%s&captcha_ts=%s&captcha_attempt=%s",
+				baseData,
+				captchaErr.CaptchaSid,
+				neturl.QueryEscape(successToken),
+				captchaErr.CaptchaTs,
+				captchaAttempt,
+			)
+			continue
+		}
+
+		token4, err = getString(resp, "response", "token")
+		if err != nil {
+			return "", "", "", fmt.Errorf("step4 parse: %w (resp: %v)", err, resp)
+		}
+		break
 	}
-	token4, err := getString(resp, "response", "token")
-	if err != nil {
-		return "", "", "", fmt.Errorf("step4 (ip mismatch?): %w (resp: %v)", err, resp)
+	if token4 == "" {
+		return "", "", "", fmt.Errorf("step4: token empty after captcha retries")
 	}
 
 	// Step 5: OK auth
