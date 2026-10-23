@@ -7,7 +7,7 @@ require (
 	github.com/cbeuw/connutil v1.0.1
 	github.com/google/uuid v1.6.0
 	github.com/metacubex/utls v1.8.4
-	github.com/pion/dtls/v3 v3.0.10
+	github.com/pion/dtls/v3 v3.1.4
 	github.com/pion/logging v0.2.4
 	github.com/pion/turn/v5 v5.0.2
 	github.com/quic-go/quic-go v0.59.0
